@@ -37,13 +37,13 @@ jobs:
     - name: Run WebElements tests
       run: |
         cd practiceautomatedtesting/webelements
-        CHROME_HEADLESS=true pytest --alluredir=../../allure-results/webelements -v
+        CHROME_HEADLESS=true CHROME_USER_DATA_DIR=/tmp/chrome-$(date +%s) pytest --alluredir=../../allure-results/webelements -v
       continue-on-error: true
       
     - name: Run Shopping tests
       run: |
         cd practiceautomatedtesting/shopping
-        CHROME_HEADLESS=true pytest --alluredir=../../allure-results/shopping -v
+        CHROME_HEADLESS=true CHROME_USER_DATA_DIR=/tmp/chrome-$(date +%s) pytest --alluredir=../../allure-results/shopping -v
       continue-on-error: true
       
     - name: Run API tests

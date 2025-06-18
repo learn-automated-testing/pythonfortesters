@@ -14,6 +14,11 @@ def driver():
     # Set up Chrome options
     chrome_options = Options()
     
+    # Only add user data directory if explicitly set (CI environment)
+    chrome_user_data_dir = os.getenv('CHROME_USER_DATA_DIR')
+    if chrome_user_data_dir:
+        chrome_options.add_argument(f"--user-data-dir={chrome_user_data_dir}")
+    
     # Check if running in headless environment (GitHub Actions)
     if os.getenv('CHROME_HEADLESS', 'false').lower() == 'true':
         chrome_options.add_argument("--headless")
