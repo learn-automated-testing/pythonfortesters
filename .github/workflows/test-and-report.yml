@@ -84,6 +84,7 @@ jobs:
         name: allure-report
         path: allure-report/
         retention-days: 30
+        if-no-files-found: error
         
     - name: Upload Test Results as Artifact
       uses: actions/upload-artifact@v4
@@ -91,10 +92,15 @@ jobs:
         name: test-results
         path: allure-results/
         retention-days: 30
+        if-no-files-found: warn
         
     - name: Generate Test Summary
       run: |
         echo "## Test Results Summary" >> test-summary.md
+        echo "" >> test-summary.md
+        echo "**Allure Report:** Available as artifact: allure-report" >> test-summary.md
+        echo "**GitHub Pages:** Will be deployed automatically after successful run" >> test-summary.md
+        echo "**Test Results:** Available as artifact: test-results" >> test-summary.md
         echo "" >> test-summary.md
         
         # Count test files and results
@@ -118,10 +124,6 @@ jobs:
         else
           echo "- No test results found" >> test-summary.md
         fi
-        
-        echo "" >> test-summary.md
-        echo "**Allure Report:** Available as artifact: allure-report" >> test-summary.md
-        echo "**Test Results:** Available as artifact: test-results" >> test-summary.md
         
     - name: Upload Test Summary
       uses: actions/upload-artifact@v4
