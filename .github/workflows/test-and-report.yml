@@ -23,7 +23,7 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y wget unzip curl
+        sudo apt-get install -y wget unzip curl xvfb
         
     - name: Install Chrome
       run: |
@@ -31,15 +31,6 @@ jobs:
         echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
         sudo apt-get update
         sudo apt-get install -y google-chrome-stable
-        
-    - name: Install ChromeDriver
-      run: |
-        # Use a fixed ChromeDriver version that's known to work
-        CHROMEDRIVER_VERSION="120.0.6099.109"
-        wget -q "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$CHROMEDRIVER_VERSION/linux64/chromedriver-linux64.zip" -O chromedriver.zip
-        unzip chromedriver.zip
-        sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
-        sudo chmod +x /usr/local/bin/chromedriver
         
     - name: Install Allure commandline
       run: |
@@ -79,7 +70,6 @@ jobs:
         
     - name: Start virtual display
       run: |
-        sudo apt-get install -y xvfb
         Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
         
     - name: Run WebElements tests
