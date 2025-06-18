@@ -1,0 +1,8 @@
+
+All links in the component:
+Link text: "Home Page", href: "https://practiceautomatedtesting.com/"
+Link text: "Form Elements", href: "https://practiceautomatedtesting.com/webelements"
+Link text: "Checkboxes", href: "https://practiceautomatedtesting.com/webelements/checkboxes"
+Link text: "Non-existent Page", href: "https://practiceautomatedtesting.com/nonexistent-page"
+Link text: "Invalid Path", href: "https://practiceautomatedtesting.com/webelements/invalid-path"
+Link text: "404 Page", href: "https://practiceautomatedtesting.com/webelements/404"

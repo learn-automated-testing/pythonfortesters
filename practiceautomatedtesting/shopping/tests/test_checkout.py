@@ -1,10 +1,13 @@
 import pytest
+import allure
 from pages.shopping_page import ShoppingPage
 from pages.checkout_page import CheckoutPage
 import logging
 
 logger = logging.getLogger(__name__)
 
+@allure.epic("Shopping Cart")
+@allure.feature("Checkout Process")
 class TestCheckout:
     @pytest.fixture(autouse=True)
     def setup(self, driver):
@@ -12,90 +15,81 @@ class TestCheckout:
         self.checkout_page = CheckoutPage(driver)
         self.shopping_page.navigate()
     
+    @allure.story("PayPal Checkout")
+    @allure.severity(allure.severity_level.CRITICAL)
     def test_paypal_checkout(self, driver):
         """Test checkout using PayPal payment method"""
-        # Add Bluetooth Headphones to cart
-        self.shopping_page.add_product_to_cart_by_aria("Bluetooth Headphones")
+        with allure.step("Add Bluetooth Headphones to cart"):
+            self.shopping_page.add_product_to_cart_by_aria("Bluetooth Headphones")
         
-        # Go to cart
-        self.shopping_page.go_to_cart()
+        with allure.step("Navigate to cart"):
+            self.shopping_page.go_to_cart()
         
-        # Select PayPal as payment method
-        self.checkout_page.select_paypal()
+        with allure.step("Select PayPal payment method"):
+            self.checkout_page.select_paypal()
         
-        # Fill PayPal email
-        self.checkout_page.fill_paypal_email("test@gmail.com")
+        with allure.step("Fill PayPal email"):
+            self.checkout_page.fill_paypal_email("test@gmail.com")
         
-        # Submit payment
-        self.checkout_page.submit_payment()
+        with allure.step("Submit payment"):
+            self.checkout_page.submit_payment()
         
-        # Verify order success
-        assert self.checkout_page.verify_order_success(), "Order was not placed successfully"
+        with allure.step("Verify order success"):
+            assert self.checkout_page.verify_order_success(), "Order was not placed successfully"
     
+    @allure.story("Standard Checkout")
+    @allure.severity(allure.severity_level.CRITICAL)
     def test_add_items_and_checkout(self, driver):
         """Test adding items to cart and completing checkout"""
-        # Sort products by price
-        self.shopping_page.sort_by_price()
+        with allure.step("Sort products and set price range"):
+            self.shopping_page.sort_by_price()
+            self.shopping_page.set_price_range(0, 100)
         
-        # Set price range
-        self.shopping_page.set_price_range(0, 100)
+        with allure.step("Add items to cart"):
+            first_item_added = self.shopping_page.add_product_to_cart("Bluetooth Headphones")
+            assert first_item_added, "Failed to add first item to cart"
+            
+            second_item_added = self.shopping_page.add_product_to_cart("Desk Lamp")
+            assert second_item_added, "Failed to add second item to cart"
         
-        # Add items to cart with debugging
-        print("\nAttempting to add first item...")
-        first_item_added = self.shopping_page.add_product_to_cart("Bluetooth Headphones")
-        assert first_item_added, "Failed to add first item to cart"
-        print("First item added successfully")
+        with allure.step("Navigate to cart"):
+            self.shopping_page.go_to_cart()
         
-        print("\nAttempting to add second item...")
-        second_item_added = self.shopping_page.add_product_to_cart("Desk Lamp")
-        assert second_item_added, "Failed to add second item to cart"
-        print("Second item added successfully")
+        with allure.step("Verify cart items"):
+            cart_items = self.checkout_page.get_cart_items()
+            assert len(cart_items) == 2, f"Expected 2 items in cart, but found {len(cart_items)}"
         
-        # Go to checkout
-        print("\nNavigating to cart...")
-        self.shopping_page.go_to_cart()
+        with allure.step("Remove second item"):
+            self.checkout_page.remove_item(1)
+            cart_items = self.checkout_page.get_cart_items()
+            assert len(cart_items) == 1, "Item not removed from cart"
         
-        # Take screenshot for debugging
-        driver.save_screenshot("cart_debug.png")
-        print("Screenshot saved as cart_debug.png")
+        with allure.step("Fill payment information"):
+            self.checkout_page.fill_payment_info(
+                card_number="4111111111111111",
+                expiry_date="12/25",
+                cvv="123",
+                card_name="John Doe"
+            )
         
-        # Print page source for debugging
-        print("\nCurrent page source:")
-        print(driver.page_source)
+        with allure.step("Place order"):
+            self.checkout_page.place_order()
         
-        # Verify items in cart
-        cart_items = self.checkout_page.get_cart_items()
-        print(f"\nFound {len(cart_items)} items in cart")
-        assert len(cart_items) == 2, f"Expected 2 items in cart, but found {len(cart_items)}"
-        
-        # Remove second item
-        self.checkout_page.remove_item(1)
-        cart_items = self.checkout_page.get_cart_items()
-        assert len(cart_items) == 1, "Item not removed from cart"
-        
-        # Fill payment information
-        self.checkout_page.fill_payment_info(
-            card_number="4111111111111111",
-            expiry_date="12/25",
-            cvv="123",
-            card_name="John Doe"
-        )
-        
-        # Place order
-        self.checkout_page.place_order()
-        
-        # Verify order success
-        assert self.checkout_page.verify_order_success(), "Order was not placed successfully"
+        with allure.step("Verify order success"):
+            assert self.checkout_page.verify_order_success(), "Order was not placed successfully"
     
+    @allure.story("Empty Cart")
+    @allure.severity(allure.severity_level.NORMAL)
     def test_empty_cart_checkout(self, driver):
         """Test attempting checkout with empty cart"""
-        self.checkout_page.navigate()
+        with allure.step("Navigate to checkout"):
+            self.checkout_page.navigate()
         
-        # Verify no items in cart
-        cart_items = self.checkout_page.get_cart_items()
-        assert len(cart_items) == 0, "Your cart is empty"
+        with allure.step("Verify empty cart"):
+            cart_items = self.checkout_page.get_cart_items()
+            assert len(cart_items) == 0, "Your cart is empty"
         
-        # Verify totals
-        assert self.checkout_page.get_subtotal() == 0.0, "Subtotal should be 0"
-        assert self.checkout_page.get_tax() == 0.0, "Tax should be 0"
-        assert self.checkout_page.get_total() == 0.0, "Total should be 0" 
+        with allure.step("Verify totals"):
+            assert self.checkout_page.get_subtotal() == 0.0, "Subtotal should be 0"
+            assert self.checkout_page.get_tax() == 0.0, "Tax should be 0"
+            assert self.checkout_page.get_total() == 0.0, "Total should be 0" 

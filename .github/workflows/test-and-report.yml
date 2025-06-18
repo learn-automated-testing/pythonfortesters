@@ -1,0 +1,155 @@
+name: Run Tests and Generate Reports
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  test-and-report:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: [3.9, 3.10, 3.11]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget unzip
+        
+    - name: Install Allure commandline
+      run: |
+        wget -qO- https://repo.maven.apache.org/maven2/io/qameta/allure/allure-commandline/2.24.0/allure-commandline-2.24.0.tgz | tar -xz -C /opt/
+        ln -s /opt/allure-2.24.0/bin/allure /usr/local/bin/allure
+        
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest allure-pytest pytest-html requests python-dotenv selenium webdriver-manager
+        
+    - name: Create combined requirements.txt
+      run: |
+        cat practiceautomatedtesting/shopping/requirements.txt > combined_requirements.txt
+        echo "" >> combined_requirements.txt
+        cat practiceautomatedtesting/api/requirements.txt >> combined_requirements.txt
+        # Remove duplicates
+        sort combined_requirements.txt | uniq > temp_requirements.txt
+        mv temp_requirements.txt combined_requirements.txt
+        
+    - name: Install project dependencies
+      run: |
+        pip install -r combined_requirements.txt
+        
+    - name: Run WebElements tests
+      run: |
+        cd practiceautomatedtesting/webelements
+        pytest --alluredir=../../allure-results/webelements -v
+      continue-on-error: true
+      
+    - name: Run Shopping tests
+      run: |
+        cd practiceautomatedtesting/shopping
+        pytest --alluredir=../../allure-results/shopping -v
+      continue-on-error: true
+      
+    - name: Run API tests
+      run: |
+        cd practiceautomatedtesting/api
+        pytest --alluredir=../../allure-results/api -v
+      continue-on-error: true
+      
+    - name: Generate Allure Report
+      run: |
+        allure generate allure-results --clean -o allure-report
+        
+    - name: Upload Allure Report as Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: allure-report-${{ matrix.python-version }}
+        path: allure-report/
+        retention-days: 30
+        
+    - name: Upload Test Results as Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results-${{ matrix.python-version }}
+        path: allure-results/
+        retention-days: 30
+        
+    - name: Generate Test Summary
+      run: |
+        echo "## Test Results Summary for Python ${{ matrix.python-version }}" >> test-summary.md
+        echo "" >> test-summary.md
+        
+        # Count test files and results
+        echo "### WebElements Tests" >> test-summary.md
+        if [ -d "allure-results/webelements" ]; then
+          echo "- Test results available in allure-results/webelements" >> test-summary.md
+        else
+          echo "- No test results found" >> test-summary.md
+        fi
+        
+        echo "### Shopping Tests" >> test-summary.md
+        if [ -d "allure-results/shopping" ]; then
+          echo "- Test results available in allure-results/shopping" >> test-summary.md
+        else
+          echo "- No test results found" >> test-summary.md
+        fi
+        
+        echo "### API Tests" >> test-summary.md
+        if [ -d "allure-results/api" ]; then
+          echo "- Test results available in allure-results/api" >> test-summary.md
+        else
+          echo "- No test results found" >> test-summary.md
+        fi
+        
+        echo "" >> test-summary.md
+        echo "**Allure Report:** Available as artifact: allure-report-${{ matrix.python-version }}" >> test-summary.md
+        echo "**Test Results:** Available as artifact: test-results-${{ matrix.python-version }}" >> test-summary.md
+        
+    - name: Upload Test Summary
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-summary-${{ matrix.python-version }}
+        path: test-summary.md
+        retention-days: 30
+        
+    - name: Comment PR with Test Results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          let summary = '';
+          try {
+            summary = fs.readFileSync('test-summary.md', 'utf8');
+          } catch (error) {
+            summary = '## Test Results Summary\n\nTest execution completed. Check artifacts for detailed results.';
+          }
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: summary
+          }); 

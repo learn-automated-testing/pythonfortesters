@@ -1,0 +1,12 @@
+Navigated to page
+Found Widgets menu
+Clicked Widgets menu
+Found Hover and Tooltip link
+Clicked Hover and Tooltip link
+Found form section
+Found hover button
+Button text: Hover me
+Button displayed: True
+Hovered over button
+Found tooltip
+Tooltip displayed: True

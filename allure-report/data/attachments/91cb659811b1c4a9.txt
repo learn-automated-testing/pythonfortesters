@@ -1,0 +1,29 @@
+Navigated to page
+Found Widgets menu
+Clicked Widgets menu
+Found Hover and Tooltip link
+Clicked Hover and Tooltip link
+Found form section
+Found hover button
+Button text: Hover me
+Button displayed: True
+Tooltip not found (expected): Message: no such element: Unable to locate element: {"method":"css selector","selector":"[id="custom-tooltip"]"}
+  (Session info: chrome=137.0.7151.105); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Stacktrace:
+0   chromedriver                        0x0000000104b2dd14 cxxbridge1$str$ptr + 2735276
+1   chromedriver                        0x0000000104b25f88 cxxbridge1$str$ptr + 2703136
+2   chromedriver                        0x00000001046766f0 cxxbridge1$string$len + 90424
+3   chromedriver                        0x00000001046bd9e0 cxxbridge1$string$len + 381992
+4   chromedriver                        0x00000001046ff0c8 cxxbridge1$string$len + 650000
+5   chromedriver                        0x00000001046b1be8 cxxbridge1$string$len + 333360
+6   chromedriver                        0x0000000104af1598 cxxbridge1$str$ptr + 2487600
+7   chromedriver                        0x0000000104af4830 cxxbridge1$str$ptr + 2500552
+8   chromedriver                        0x0000000104ad1c14 cxxbridge1$str$ptr + 2358188
+9   chromedriver                        0x0000000104af50b8 cxxbridge1$str$ptr + 2502736
+10  chromedriver                        0x0000000104ac2dec cxxbridge1$str$ptr + 2297220
+11  chromedriver                        0x0000000104b15420 cxxbridge1$str$ptr + 2634680
+12  chromedriver                        0x0000000104b155ac cxxbridge1$str$ptr + 2635076
+13  chromedriver                        0x0000000104b25bd4 cxxbridge1$str$ptr + 2702188
+14  libsystem_pthread.dylib             0x00000001959adc0c _pthread_start + 136
+15  libsystem_pthread.dylib             0x00000001959a8b80 thread_start + 8
+

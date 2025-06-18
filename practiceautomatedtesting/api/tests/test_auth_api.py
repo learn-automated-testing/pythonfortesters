@@ -12,7 +12,7 @@ class TestAuthAPI:
     def test_auth_success(self):
         """Test successful authentication"""
         response = self.client.post(
-            BASE_PATH,
+            f"{self.client.base_url}{BASE_PATH}",
             json={"username": "admin", "password": "password123"}
         )
         assert response.ok
@@ -23,7 +23,7 @@ class TestAuthAPI:
     def test_auth_failure(self):
         """Test failed authentication"""
         response = self.client.post(
-            BASE_PATH,
+            f"{self.client.base_url}{BASE_PATH}",
             json={"username": "admin", "password": "wrongpassword"}
         )
         assert response.status_code in [401, 400]

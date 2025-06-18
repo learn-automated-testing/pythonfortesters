@@ -1,0 +1,13 @@
+
+Component text content:
+Broken Links & Images
+Work Instruction: Test the following working and broken images.
+Working Image
+Valid Image
+Broken Image
+Broken Image
+
+Paragraph texts:
+Paragraph text: 'Work Instruction: Test the following working and broken images.'
+Paragraph text: 'Valid Image'
+Paragraph text: 'Broken Image'

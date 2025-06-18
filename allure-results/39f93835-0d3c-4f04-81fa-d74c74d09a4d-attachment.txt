@@ -1,0 +1,39 @@
+Navigated to page
+Found Widgets menu
+Clicked Widgets menu
+Found Hover and Tooltip link
+Clicked Hover and Tooltip link
+Found form section
+Found hover button
+Button text: Hover me
+Button displayed: True
+
+Iteration 1
+Hovered over button
+Found tooltip
+Tooltip displayed: True
+Moved mouse away
+Tooltip still displayed: True
+Tooltip not found (expected): assert not True
+ +  where True = <bound method WebElement.is_displayed of <selenium.webdriver.remote.webelement.WebElement (session="07a5aa1ee7b19d64c9507f6e6123e7ae", element="f.37241F8FB8406D45F256ADBBB2888FE8.d.1D1F788BD67585945D21A1AB5B5DA4B8.e.17")>>()
+ +    where <bound method WebElement.is_displayed of <selenium.webdriver.remote.webelement.WebElement (session="07a5aa1ee7b19d64c9507f6e6123e7ae", element="f.37241F8FB8406D45F256ADBBB2888FE8.d.1D1F788BD67585945D21A1AB5B5DA4B8.e.17")>> = <selenium.webdriver.remote.webelement.WebElement (session="07a5aa1ee7b19d64c9507f6e6123e7ae", element="f.37241F8FB8406D45F256ADBBB2888FE8.d.1D1F788BD67585945D21A1AB5B5DA4B8.e.17")>.is_displayed
+
+Iteration 2
+Hovered over button
+Found tooltip
+Tooltip displayed: True
+Moved mouse away
+Tooltip still displayed: True
+Tooltip not found (expected): assert not True
+ +  where True = <bound method WebElement.is_displayed of <selenium.webdriver.remote.webelement.WebElement (session="07a5aa1ee7b19d64c9507f6e6123e7ae", element="f.37241F8FB8406D45F256ADBBB2888FE8.d.1D1F788BD67585945D21A1AB5B5DA4B8.e.17")>>()
+ +    where <bound method WebElement.is_displayed of <selenium.webdriver.remote.webelement.WebElement (session="07a5aa1ee7b19d64c9507f6e6123e7ae", element="f.37241F8FB8406D45F256ADBBB2888FE8.d.1D1F788BD67585945D21A1AB5B5DA4B8.e.17")>> = <selenium.webdriver.remote.webelement.WebElement (session="07a5aa1ee7b19d64c9507f6e6123e7ae", element="f.37241F8FB8406D45F256ADBBB2888FE8.d.1D1F788BD67585945D21A1AB5B5DA4B8.e.17")>.is_displayed
+
+Iteration 3
+Hovered over button
+Found tooltip
+Tooltip displayed: True
+Moved mouse away
+Tooltip still displayed: True
+Tooltip not found (expected): assert not True
+ +  where True = <bound method WebElement.is_displayed of <selenium.webdriver.remote.webelement.WebElement (session="07a5aa1ee7b19d64c9507f6e6123e7ae", element="f.37241F8FB8406D45F256ADBBB2888FE8.d.1D1F788BD67585945D21A1AB5B5DA4B8.e.17")>>()
+ +    where <bound method WebElement.is_displayed of <selenium.webdriver.remote.webelement.WebElement (session="07a5aa1ee7b19d64c9507f6e6123e7ae", element="f.37241F8FB8406D45F256ADBBB2888FE8.d.1D1F788BD67585945D21A1AB5B5DA4B8.e.17")>> = <selenium.webdriver.remote.webelement.WebElement (session="07a5aa1ee7b19d64c9507f6e6123e7ae", element="f.37241F8FB8406D45F256ADBBB2888FE8.d.1D1F788BD67585945D21A1AB5B5DA4B8.e.17")>.is_displayed
