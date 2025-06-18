@@ -1,25 +1,9 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import pytest
 
 class TestRadioButton:
-    @pytest.fixture
-    def driver(self):
-        # Set up Chrome options
-        chrome_options = Options()
-        chrome_options.add_argument("--start-maximized")
-        
-        # Initialize the Chrome driver with automatic driver management
-        driver = webdriver.Chrome(options=chrome_options)
-        
-        yield driver
-        
-        # Clean up
-        driver.quit()
-
     def navigate_to_radio_page(self, driver):
         # Navigate to the page
         driver.get("https://practiceautomatedtesting.com/webelements")

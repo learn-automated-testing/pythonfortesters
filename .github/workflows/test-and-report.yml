@@ -23,7 +23,24 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y wget unzip
+        sudo apt-get install -y wget unzip curl
+        
+    - name: Install Chrome
+      run: |
+        wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+        echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable
+        
+    - name: Install ChromeDriver
+      run: |
+        CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | awk -F'.' '{print $1}')
+        wget -q "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION" -O chrome_version
+        CHROMEDRIVER_VERSION=$(cat chrome_version)
+        wget -q "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip" -O chromedriver.zip
+        unzip chromedriver.zip
+        sudo mv chromedriver /usr/local/bin/
+        sudo chmod +x /usr/local/bin/chromedriver
         
     - name: Install Allure commandline
       run: |
@@ -56,17 +73,33 @@ jobs:
       run: |
         pip install -r combined_requirements.txt
         
+    - name: Set up environment variables
+      run: |
+        echo "CHROME_HEADLESS=true" >> $GITHUB_ENV
+        echo "DISPLAY=:99" >> $GITHUB_ENV
+        
+    - name: Start virtual display
+      run: |
+        sudo apt-get install -y xvfb
+        Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+        
     - name: Run WebElements tests
       run: |
         cd practiceautomatedtesting/webelements
         pytest --alluredir=../../allure-results/webelements -v
       continue-on-error: true
+      env:
+        CHROME_HEADLESS: true
+        DISPLAY: :99
       
     - name: Run Shopping tests
       run: |
         cd practiceautomatedtesting/shopping
         pytest --alluredir=../../allure-results/shopping -v
       continue-on-error: true
+      env:
+        CHROME_HEADLESS: true
+        DISPLAY: :99
       
     - name: Run API tests
       run: |
