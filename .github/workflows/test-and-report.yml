@@ -11,18 +11,14 @@ jobs:
   test-and-report:
     runs-on: ubuntu-latest
     
-    strategy:
-      matrix:
-        python-version: [3.9, 3.10, 3.11]
-    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python 3.11
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: 3.11
         
     - name: Install system dependencies
       run: |
@@ -85,20 +81,20 @@ jobs:
     - name: Upload Allure Report as Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: allure-report-${{ matrix.python-version }}
+        name: allure-report
         path: allure-report/
         retention-days: 30
         
     - name: Upload Test Results as Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: test-results-${{ matrix.python-version }}
+        name: test-results
         path: allure-results/
         retention-days: 30
         
     - name: Generate Test Summary
       run: |
-        echo "## Test Results Summary for Python ${{ matrix.python-version }}" >> test-summary.md
+        echo "## Test Results Summary" >> test-summary.md
         echo "" >> test-summary.md
         
         # Count test files and results
@@ -124,13 +120,13 @@ jobs:
         fi
         
         echo "" >> test-summary.md
-        echo "**Allure Report:** Available as artifact: allure-report-${{ matrix.python-version }}" >> test-summary.md
-        echo "**Test Results:** Available as artifact: test-results-${{ matrix.python-version }}" >> test-summary.md
+        echo "**Allure Report:** Available as artifact: allure-report" >> test-summary.md
+        echo "**Test Results:** Available as artifact: test-results" >> test-summary.md
         
     - name: Upload Test Summary
       uses: actions/upload-artifact@v4
       with:
-        name: test-summary-${{ matrix.python-version }}
+        name: test-summary
         path: test-summary.md
         retention-days: 30
         
