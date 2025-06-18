@@ -7,7 +7,7 @@ This repository automatically generates and deploys Allure test reports to GitHu
 ### **GitHub Pages URL**
 Once the workflow completes successfully, you can access the latest Allure report at:
 ```
-https://learnautomatedtesting.github.io/pythonfortesters/
+https://learnautomatedtesting.github.io/pythonfortestersu/
 ```
 
 ### **How it works**

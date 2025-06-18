@@ -28,10 +28,9 @@ def driver():
     # Additional options for stability
     chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument("--disable-plugins")
-    chrome_options.add_argument("--disable-images")  # Faster loading
-    chrome_options.add_argument("--disable-javascript")  # If not needed
     chrome_options.add_argument("--disable-web-security")
     chrome_options.add_argument("--allow-running-insecure-content")
+    chrome_options.add_argument("--remote-debugging-port=9222")
     
     # Set user agent
     chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
@@ -40,9 +39,15 @@ def driver():
         # Try to use webdriver-manager for automatic driver management
         service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=chrome_options)
-    except Exception:
-        # Fallback to system ChromeDriver
-        driver = webdriver.Chrome(options=chrome_options)
+    except Exception as e:
+        print(f"WebDriver Manager failed: {e}")
+        try:
+            # Fallback to system ChromeDriver
+            driver = webdriver.Chrome(options=chrome_options)
+        except Exception as e2:
+            print(f"System ChromeDriver failed: {e2}")
+            # Last resort - try without service
+            driver = webdriver.Chrome(options=chrome_options)
     
     # Set implicit wait
     driver.implicitly_wait(10)
