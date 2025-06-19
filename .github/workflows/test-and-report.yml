@@ -84,7 +84,7 @@ jobs:
     - name: Run WebElements tests
       run: |
         cd practiceautomatedtesting/webelements
-        pytest --alluredir=../../allure-results/webelements -v
+        pytest --alluredir=../../allure-results/webelements -v -n 4
       continue-on-error: true
       env:
         CHROME_HEADLESS: true
@@ -93,7 +93,7 @@ jobs:
     - name: Run Shopping tests
       run: |
         cd practiceautomatedtesting/shopping
-        pytest --alluredir=../../allure-results/shopping -v
+        pytest --alluredir=../../allure-results/shopping -v -n 4
       continue-on-error: true
       env:
         CHROME_HEADLESS: true
@@ -102,7 +102,7 @@ jobs:
     - name: Run API tests
       run: |
         cd practiceautomatedtesting/api
-        pytest --alluredir=../../allure-results/api -v
+        pytest --alluredir=../../allure-results/api -v -n 4
       continue-on-error: true
       
     - name: Generate Allure Report
