@@ -116,28 +116,18 @@ jobs:
       - name: Create GitHub Release
         if: always()
         id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: allure-history-${{ github.run_number }}
-          release_name: Allure History - Run ${{ github.run_number }}
+          name: Allure History - Run ${{ github.run_number }}
           body: |
             Allure history files for trend analysis
             Generated from workflow run ${{ github.run_number }}
           draft: false
           prerelease: false
-
-      - name: Upload Allure History to Release
-        if: always()
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./allure-history.zip
-          asset_name: allure-history.zip
-          asset_content_type: application/zip
+          files: allure-history.zip
 
       - name: Create test artifact for verification
         if: always()
