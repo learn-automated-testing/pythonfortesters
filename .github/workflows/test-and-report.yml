@@ -108,22 +108,32 @@ jobs:
           if [ -d "allure-report/history" ]; then
             echo "History directory exists. Contents:"
             ls -la allure-report/history
+            echo "Directory size:"
+            du -sh allure-report/history
+            echo "File count:"
+            find allure-report/history -type f | wc -l
           else
             echo "No history directory found!"
           fi
 
       - name: Upload Allure history
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: allure-history
           path: allure-report/history
           retention-days: 7
-          if-no-files-found: warn
+          if-no-files-found: error
 
       - name: Debug - Check if upload succeeded
         run: |
           echo "Upload step completed. Checking if artifact was created..."
           echo "This step runs after the upload to verify the process."
+
+      - name: Debug - List artifacts (if possible)
+        run: |
+          echo "Attempting to list artifacts to verify upload..."
+          echo "Note: This may not work in all contexts, but worth trying."
 
   deploy:
     needs: test-and-report
