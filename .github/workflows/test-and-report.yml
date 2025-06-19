@@ -114,6 +114,21 @@ jobs:
       run: |
         allure generate allure-results --clean -o allure-report
         
+    - name: Debug - Check if report was generated
+      run: |
+        echo "Checking allure-report directory:"
+        ls -la allure-report/ || echo "allure-report directory not found"
+        echo "Checking allure-results directory:"
+        ls -la allure-results/ || echo "allure-results directory not found"
+        
+    - name: Create fallback report if needed
+      run: |
+        if [ ! -d "allure-report" ] || [ -z "$(ls -A allure-report/)" ]; then
+          echo "Creating fallback report..."
+          mkdir -p allure-report
+          echo "<html><body><h1>Test Report</h1><p>No test results available. Check workflow logs for details.</p></body></html>" > allure-report/index.html
+        fi
+        
     - name: Upload Allure Report as Artifact
       uses: actions/upload-artifact@v4
       with:
@@ -212,6 +227,13 @@ jobs:
       with:
         name: allure-report-pages
         path: allure-report/
+        
+    - name: Debug - Check downloaded artifact
+      run: |
+        echo "Checking downloaded allure-report:"
+        ls -la allure-report/ || echo "allure-report directory not found"
+        echo "Current directory contents:"
+        ls -la
         
     - name: Setup Pages
       uses: actions/configure-pages@v4
