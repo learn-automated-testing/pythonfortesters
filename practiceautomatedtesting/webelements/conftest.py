@@ -39,6 +39,13 @@ def driver():
     chrome_options.add_argument("--allow-running-insecure-content")
     chrome_options.add_argument("--remote-debugging-port=9222")
     
+    # Cache clearing options for CI/CD
+    chrome_options.add_argument("--disable-application-cache")
+    chrome_options.add_argument("--disable-cache")
+    chrome_options.add_argument("--disable-offline-load-stale-cache")
+    chrome_options.add_argument("--disk-cache-size=0")
+    chrome_options.add_argument("--media-cache-size=0")
+    
     # Set user agent
     chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
     

@@ -13,12 +13,14 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: "pages-${{ github.ref }}"
+  cancel-in-progress: true
 
 jobs:
   test-and-report:
     runs-on: ubuntu-latest
+    outputs:
+      timestamp: ${{ env.TIMESTAMP }}
     
     steps:
     - name: Checkout code
@@ -76,10 +78,15 @@ jobs:
       run: |
         echo "CHROME_HEADLESS=true" >> $GITHUB_ENV
         echo "DISPLAY=:99" >> $GITHUB_ENV
+        echo "TIMESTAMP=$(date +%Y%m%d_%H%M%S)" >> $GITHUB_ENV
         
     - name: Start virtual display
       run: |
         Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+        
+    - name: Clean previous results
+      run: |
+        rm -rf allure-results allure-report
         
     - name: Run WebElements tests
       run: |
@@ -89,7 +96,7 @@ jobs:
       env:
         CHROME_HEADLESS: true
         DISPLAY: :99
-      
+        
     - name: Run Shopping tests
       run: |
         cd practiceautomatedtesting/shopping
@@ -98,13 +105,13 @@ jobs:
       env:
         CHROME_HEADLESS: true
         DISPLAY: :99
-      
+        
     - name: Run API tests
       run: |
         cd practiceautomatedtesting/api
         pytest --alluredir=../../allure-results/api -v -n 4
       continue-on-error: true
-      
+        
     - name: Generate Allure Report
       run: |
         allure generate allure-results --clean -o allure-report
@@ -112,7 +119,7 @@ jobs:
     - name: Upload Allure Report as Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: allure-report
+        name: allure-report-${{ env.TIMESTAMP }}
         path: allure-report/
         retention-days: 30
         if-no-files-found: error
@@ -120,7 +127,7 @@ jobs:
     - name: Upload Test Results as Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: test-results
+        name: test-results-${{ env.TIMESTAMP }}
         path: allure-results/
         retention-days: 30
         if-no-files-found: warn
@@ -129,9 +136,9 @@ jobs:
       run: |
         echo "## Test Results Summary" >> test-summary.md
         echo "" >> test-summary.md
-        echo "**Allure Report:** Available as artifact: allure-report" >> test-summary.md
+        echo "**Allure Report:** Available as artifact: allure-report-${{ env.TIMESTAMP }}" >> test-summary.md
         echo "**GitHub Pages:** Will be deployed automatically after successful run" >> test-summary.md
-        echo "**Test Results:** Available as artifact: test-results" >> test-summary.md
+        echo "**Test Results:** Available as artifact: test-results-${{ env.TIMESTAMP }}" >> test-summary.md
         echo "" >> test-summary.md
         
         # Count test files and results
@@ -159,7 +166,7 @@ jobs:
     - name: Upload Test Summary
       uses: actions/upload-artifact@v4
       with:
-        name: test-summary
+        name: test-summary-${{ env.TIMESTAMP }}
         path: test-summary.md
         retention-days: 30
         
@@ -197,7 +204,7 @@ jobs:
     - name: Download Allure Report
       uses: actions/download-artifact@v4
       with:
-        name: allure-report
+        name: allure-report-${{ needs.test-and-report.outputs.timestamp }}
         path: allure-report/
         
     - name: Setup Pages
