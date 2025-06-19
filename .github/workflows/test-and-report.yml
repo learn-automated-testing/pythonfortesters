@@ -88,8 +88,19 @@ jobs:
         
     - name: Run WebElements tests
       run: |
+        echo "=== Running WebElements Tests ==="
         cd practiceautomatedtesting/webelements
-        pytest --alluredir=../../allure-results/webelements -v -n 4
+        echo "Current directory: $(pwd)"
+        echo "Test files found: $(find . -name "test_*.py" | wc -l)"
+        
+        if pytest --alluredir=../../allure-results/webelements -v -n 4; then
+          echo "✅ WebElements tests completed successfully"
+        else
+          echo "⚠️ WebElements tests had issues (exit code: $?)"
+        fi
+        
+        echo "=== WebElements Results ==="
+        ls -la ../../allure-results/webelements/ || echo "No webelements results found"
       continue-on-error: true
       env:
         CHROME_HEADLESS: true
@@ -97,8 +108,19 @@ jobs:
         
     - name: Run Shopping tests
       run: |
+        echo "=== Running Shopping Tests ==="
         cd practiceautomatedtesting/shopping
-        pytest --alluredir=../../allure-results/shopping -v -n 4
+        echo "Current directory: $(pwd)"
+        echo "Test files found: $(find . -name "test_*.py" | wc -l)"
+        
+        if pytest --alluredir=../../allure-results/shopping -v -n 4; then
+          echo "✅ Shopping tests completed successfully"
+        else
+          echo "⚠️ Shopping tests had issues (exit code: $?)"
+        fi
+        
+        echo "=== Shopping Results ==="
+        ls -la ../../allure-results/shopping/ || echo "No shopping results found"
       continue-on-error: true
       env:
         CHROME_HEADLESS: true
@@ -106,13 +128,53 @@ jobs:
         
     - name: Run API tests
       run: |
+        echo "=== Running API Tests ==="
         cd practiceautomatedtesting/api
-        pytest --alluredir=../../allure-results/api -v -n 4
+        echo "Current directory: $(pwd)"
+        echo "Test files found: $(find . -name "test_*.py" | wc -l)"
+        
+        if pytest --alluredir=../../allure-results/api -v -n 4; then
+          echo "✅ API tests completed successfully"
+        else
+          echo "⚠️ API tests had issues (exit code: $?)"
+        fi
+        
+        echo "=== API Results ==="
+        ls -la ../../allure-results/api/ || echo "No api results found"
       continue-on-error: true
         
     - name: Generate Allure Report
       run: |
-        allure generate allure-results --clean -o allure-report
+        echo "=== Allure Report Generation Debug ==="
+        echo "Current directory: $(pwd)"
+        echo "Allure version: $(allure --version)"
+        
+        echo "=== Checking allure-results structure ==="
+        find allure-results -type f -name "*.json" | head -10
+        echo "Total JSON files: $(find allure-results -name "*.json" | wc -l)"
+        
+        echo "=== Generating Allure Report ==="
+        if allure generate allure-results --clean -o allure-report; then
+          echo "✅ Allure report generated successfully"
+        else
+          echo "❌ Allure report generation failed with exit code $?"
+          echo "=== Debugging allure-results ==="
+          ls -la allure-results/
+          echo "=== Checking for specific directories ==="
+          for dir in webelements shopping api; do
+            if [ -d "allure-results/$dir" ]; then
+              echo "📁 $dir directory exists with $(find allure-results/$dir -name "*.json" | wc -l) JSON files"
+            else
+              echo "❌ $dir directory missing"
+            fi
+          done
+          exit 1
+        fi
+        
+        echo "=== Report Generation Complete ==="
+        echo "Report directory size: $(du -sh allure-report/)"
+        echo "Report files:"
+        ls -la allure-report/
         
     - name: Debug - Check if report was generated
       run: |
@@ -214,9 +276,10 @@ jobs:
   deploy:
     needs: test-and-report
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
     
     steps:
     - name: Checkout
@@ -228,21 +291,10 @@ jobs:
         name: allure-report-pages
         path: allure-report/
         
-    - name: Debug - Check downloaded artifact
-      run: |
-        echo "Checking downloaded allure-report:"
-        ls -la allure-report/ || echo "allure-report directory not found"
-        echo "Current directory contents:"
-        ls -la
-        
-    - name: Setup Pages
-      uses: actions/configure-pages@v4
-      
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
+    - name: Deploy Allure Report to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
       with:
-        path: allure-report/
-        
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4 
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./allure-report
+        publish_branch: allure-report
+        keep_files: false 
