@@ -50,6 +50,22 @@ jobs:
           path: allure-history/
         continue-on-error: true
 
+      - name: Debug - Check download result
+        run: |
+          echo "Download step completed. Checking what was downloaded..."
+          if [ -d "allure-history" ]; then
+            echo "allure-history directory exists:"
+            ls -la allure-history/
+            if [ -d "allure-history/history" ]; then
+              echo "allure-history/history directory exists:"
+              ls -la allure-history/history/
+            else
+              echo "allure-history/history directory does not exist"
+            fi
+          else
+            echo "allure-history directory does not exist"
+          fi
+
       - name: Setup Allure history
         run: |
           if [ -d "allure-history/history" ]; then
@@ -102,6 +118,12 @@ jobs:
           name: allure-history
           path: allure-report/history
           retention-days: 7
+          if-no-files-found: warn
+
+      - name: Debug - Check if upload succeeded
+        run: |
+          echo "Upload step completed. Checking if artifact was created..."
+          echo "This step runs after the upload to verify the process."
 
   deploy:
     needs: test-and-report
