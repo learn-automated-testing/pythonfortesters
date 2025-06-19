@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -44,27 +44,24 @@ jobs:
           rm -rf allure-results allure-report allure-history
 
       - name: Download previous Allure history
-        uses: actions/download-artifact@v4
-        with:
-          name: allure-history
-          path: allure-history/
-        continue-on-error: true
-
-      - name: Debug - Check download result
         run: |
-          echo "Download step completed. Checking what was downloaded..."
-          if [ -d "allure-history" ]; then
-            echo "allure-history directory exists:"
-            ls -la allure-history/
-            if [ -d "allure-history/history" ]; then
-              echo "allure-history/history directory exists:"
-              ls -la allure-history/history/
+          echo "Downloading Allure history from latest release..."
+          # Get the latest release
+          LATEST_RELEASE=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.tag_name')
+          if [ "$LATEST_RELEASE" != "null" ]; then
+            echo "Found latest release: $LATEST_RELEASE"
+            # Download the history artifact from the release
+            curl -L -o allure-history.zip "https://github.com/${{ github.repository }}/releases/download/$LATEST_RELEASE/allure-history.zip"
+            if [ -f "allure-history.zip" ]; then
+              unzip -o allure-history.zip
+              echo "History downloaded successfully"
             else
-              echo "allure-history/history directory does not exist"
+              echo "No history artifact found in release"
             fi
           else
-            echo "allure-history directory does not exist"
+            echo "No releases found, starting fresh"
           fi
+        continue-on-error: true
 
       - name: Setup Allure history
         run: |
@@ -103,42 +100,44 @@ jobs:
           retention-days: 30
           if-no-files-found: error
 
-      - name: Debug - Check history directory before upload
-        run: |
-          if [ -d "allure-report/history" ]; then
-            echo "History directory exists. Contents:"
-            ls -la allure-report/history
-            echo "Directory size:"
-            du -sh allure-report/history
-            echo "File count:"
-            find allure-report/history -type f | wc -l
-          else
-            echo "No history directory found!"
-          fi
-
       - name: Upload Allure history
         if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: allure-history
-          path: allure-report/history
-          retention-days: 7
-          if-no-files-found: error
-
-      - name: Debug - Check if upload succeeded
         run: |
-          echo "Upload step completed. Checking if artifact was created..."
-          echo "This step runs after the upload to verify the process."
+          echo "Preparing Allure history for release..."
+          if [ -d "allure-report/history" ]; then
+            echo "History directory exists, creating zip file"
+            cp -r allure-report/history allure-history/
+            zip -r allure-history.zip allure-history/
+            echo "History zip created successfully"
+          else
+            echo "No history directory found"
+          fi
 
-      - name: Debug - Verify upload with explicit check
+      - name: Create GitHub Release
         if: always()
-        run: |
-          echo "=== Upload Verification ==="
-          echo "Current directory: $(pwd)"
-          echo "Checking if allure-report/history still exists:"
-          ls -la allure-report/history/ || echo "Directory not found"
-          echo "Checking if we can access the uploaded artifact:"
-          echo "Note: This is a verification step to ensure the upload worked."
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: allure-history-${{ github.run_number }}
+          release_name: Allure History - Run ${{ github.run_number }}
+          body: |
+            Allure history files for trend analysis
+            Generated from workflow run ${{ github.run_number }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Allure History to Release
+        if: always()
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./allure-history.zip
+          asset_name: allure-history.zip
+          asset_content_type: application/zip
 
       - name: Create test artifact for verification
         if: always()
