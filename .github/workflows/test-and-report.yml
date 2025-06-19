@@ -93,7 +93,7 @@ jobs:
         echo "Current directory: $(pwd)"
         echo "Test files found: $(find . -name "test_*.py" | wc -l)"
         
-        if pytest --alluredir=../../allure-results -v -n 4; then
+        if pytest --alluredir=../../allure-results -v -n 2 --dist=loadfile; then
           echo "✅ WebElements tests completed successfully"
         else
           echo "⚠️ WebElements tests had issues (exit code: $?)"
@@ -113,7 +113,7 @@ jobs:
         echo "Current directory: $(pwd)"
         echo "Test files found: $(find . -name "test_*.py" | wc -l)"
         
-        if pytest --alluredir=../../allure-results -v -n 4; then
+        if pytest --alluredir=../../allure-results -v -n 2 --dist=loadfile; then
           echo "✅ Shopping tests completed successfully"
         else
           echo "⚠️ Shopping tests had issues (exit code: $?)"
@@ -133,7 +133,7 @@ jobs:
         echo "Current directory: $(pwd)"
         echo "Test files found: $(find . -name "test_*.py" | wc -l)"
         
-        if pytest --alluredir=../../allure-results -v -n 4; then
+        if pytest --alluredir=../../allure-results -v -n 2 --dist=loadfile; then
           echo "✅ API tests completed successfully"
         else
           echo "⚠️ API tests had issues (exit code: $?)"

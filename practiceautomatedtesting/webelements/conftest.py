@@ -6,6 +6,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+import random
 
 @pytest.fixture(scope="function")
 def driver():
@@ -37,7 +38,13 @@ def driver():
     # Additional options for stability
     chrome_options.add_argument("--disable-web-security")
     chrome_options.add_argument("--allow-running-insecure-content")
-    chrome_options.add_argument("--remote-debugging-port=9222")
+    
+    # Parallel execution improvements
+    debug_port = random.randint(9222, 9299)
+    chrome_options.add_argument(f"--remote-debugging-port={debug_port}")
+    chrome_options.add_argument("--disable-background-timer-throttling")
+    chrome_options.add_argument("--disable-backgrounding-occluded-windows")
+    chrome_options.add_argument("--disable-renderer-backgrounding")
     
     # Cache clearing options for CI/CD
     chrome_options.add_argument("--disable-application-cache")
