@@ -1,5 +1,7 @@
 import pytest
 import os
+import allure
+from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -63,4 +65,69 @@ def driver():
     try:
         driver.quit()
     except Exception:
-        pass 
+        pass
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """
+    Hook to capture screenshot on test failure
+    """
+    outcome = yield
+    rep = outcome.get_result()
+    
+    # Only capture screenshot if test failed
+    if rep.when == "call" and rep.failed:
+        try:
+            # Get the driver from the test
+            driver = item.funcargs.get("driver")
+            if driver:
+                # Create screenshots directory if it doesn't exist
+                screenshots_dir = "allure-results/screenshots"
+                os.makedirs(screenshots_dir, exist_ok=True)
+                
+                # Generate unique filename
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                test_name = item.name.replace("/", "_").replace("\\", "_")
+                screenshot_path = f"{screenshots_dir}/{test_name}_{timestamp}.png"
+                
+                # Take screenshot
+                driver.save_screenshot(screenshot_path)
+                
+                # Attach screenshot to Allure report
+                with open(screenshot_path, "rb") as f:
+                    allure.attach(
+                        f.read(),
+                        name=f"Screenshot - {test_name}",
+                        attachment_type=allure.attachment_type.PNG
+                    )
+                
+                print(f"📸 Screenshot saved: {screenshot_path}")
+                
+        except Exception as e:
+            print(f"❌ Failed to capture screenshot: {e}")
+
+@pytest.fixture(autouse=True)
+def allure_environment_info(driver):
+    """
+    Add environment information to Allure report
+    """
+    if driver:
+        try:
+            # Add browser info
+            browser_info = {
+                "Browser": driver.capabilities.get("browserName", "Unknown"),
+                "Browser Version": driver.capabilities.get("browserVersion", "Unknown"),
+                "Platform": driver.capabilities.get("platformName", "Unknown"),
+                "Headless": os.getenv('CHROME_HEADLESS', 'false').lower() == 'true'
+            }
+            
+            # Write environment info to allure-results
+            env_file = "allure-results/environment.properties"
+            os.makedirs("allure-results", exist_ok=True)
+            
+            with open(env_file, "w") as f:
+                for key, value in browser_info.items():
+                    f.write(f"{key}={value}\n")
+                    
+        except Exception as e:
+            print(f"❌ Failed to add environment info: {e}") 

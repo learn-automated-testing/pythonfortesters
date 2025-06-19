@@ -1,9 +1,9 @@
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, ElementNotInteractableException
 import pytest
-import time
+import allure
 
 class TestCheckbox:
     def navigate_to_checkbox_page(self, driver):
@@ -27,7 +27,14 @@ class TestCheckbox:
             EC.visibility_of_element_located((By.CSS_SELECTOR, "[class*='componentContainer']"))
         )
 
+    @allure.feature("Checkbox Functionality")
+    @allure.story("Label Click Interaction")
+    @allure.severity(allure.severity_level.NORMAL)
     def test_checkbox_label_clicks(self, driver):
+        """
+        Test that clicking labels properly toggles checkbox states
+        """
+        # Navigate to checkbox page
         self.navigate_to_checkbox_page(driver)
         
         # Get checkbox and label elements
