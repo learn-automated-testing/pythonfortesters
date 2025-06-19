@@ -130,10 +130,32 @@ jobs:
           echo "Upload step completed. Checking if artifact was created..."
           echo "This step runs after the upload to verify the process."
 
-      - name: Debug - List artifacts (if possible)
+      - name: Debug - Verify upload with explicit check
+        if: always()
         run: |
-          echo "Attempting to list artifacts to verify upload..."
-          echo "Note: This may not work in all contexts, but worth trying."
+          echo "=== Upload Verification ==="
+          echo "Current directory: $(pwd)"
+          echo "Checking if allure-report/history still exists:"
+          ls -la allure-report/history/ || echo "Directory not found"
+          echo "Checking if we can access the uploaded artifact:"
+          echo "Note: This is a verification step to ensure the upload worked."
+
+      - name: Create test artifact for verification
+        if: always()
+        run: |
+          echo "Creating test file for artifact verification"
+          mkdir -p test-artifact
+          echo "This is a test artifact created at $(date)" > test-artifact/test.txt
+          echo "Test artifact contents:" > test-artifact/info.txt
+          echo "Created to verify upload mechanism works" >> test-artifact/info.txt
+
+      - name: Upload test artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifact-verification
+          path: test-artifact/
+          retention-days: 1
 
   deploy:
     needs: test-and-report
