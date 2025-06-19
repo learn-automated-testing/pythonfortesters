@@ -93,14 +93,14 @@ jobs:
         echo "Current directory: $(pwd)"
         echo "Test files found: $(find . -name "test_*.py" | wc -l)"
         
-        if pytest --alluredir=../../allure-results/webelements -v -n 4; then
+        if pytest --alluredir=../../allure-results -v -n 4; then
           echo "✅ WebElements tests completed successfully"
         else
           echo "⚠️ WebElements tests had issues (exit code: $?)"
         fi
         
         echo "=== WebElements Results ==="
-        ls -la ../../allure-results/webelements/ || echo "No webelements results found"
+        ls -la ../../allure-results/ || echo "No results found"
       continue-on-error: true
       env:
         CHROME_HEADLESS: true
@@ -113,14 +113,14 @@ jobs:
         echo "Current directory: $(pwd)"
         echo "Test files found: $(find . -name "test_*.py" | wc -l)"
         
-        if pytest --alluredir=../../allure-results/shopping -v -n 4; then
+        if pytest --alluredir=../../allure-results -v -n 4; then
           echo "✅ Shopping tests completed successfully"
         else
           echo "⚠️ Shopping tests had issues (exit code: $?)"
         fi
         
         echo "=== Shopping Results ==="
-        ls -la ../../allure-results/shopping/ || echo "No shopping results found"
+        ls -la ../../allure-results/ || echo "No results found"
       continue-on-error: true
       env:
         CHROME_HEADLESS: true
@@ -133,14 +133,14 @@ jobs:
         echo "Current directory: $(pwd)"
         echo "Test files found: $(find . -name "test_*.py" | wc -l)"
         
-        if pytest --alluredir=../../allure-results/api -v -n 4; then
+        if pytest --alluredir=../../allure-results -v -n 4; then
           echo "✅ API tests completed successfully"
         else
           echo "⚠️ API tests had issues (exit code: $?)"
         fi
         
         echo "=== API Results ==="
-        ls -la ../../allure-results/api/ || echo "No api results found"
+        ls -la ../../allure-results/ || echo "No results found"
       continue-on-error: true
         
     - name: Generate Allure Report
@@ -273,6 +273,30 @@ jobs:
             body: summary
           });
           
+    - name: Debug - Check allure-results before generation
+      run: |
+        echo "=== Checking allure-results before report generation ==="
+        echo "Current directory: $(pwd)"
+        echo "Allure results directory exists: $(test -d allure-results && echo 'YES' || echo 'NO')"
+        
+        if [ -d "allure-results" ]; then
+          echo "Allure results structure:"
+          find allure-results -type f -name "*.json" | head -20
+          echo "Total JSON files: $(find allure-results -name "*.json" | wc -l)"
+          
+          echo "=== Checking each test suite ==="
+          for suite in webelements shopping api; do
+            if [ -d "allure-results/$suite" ]; then
+              echo "📁 $suite: $(find allure-results/$suite -name "*.json" | wc -l) JSON files"
+              ls -la allure-results/$suite/ | head -5
+            else
+              echo "❌ $suite directory missing"
+            fi
+          done
+        else
+          echo "❌ allure-results directory not found!"
+        fi
+        
   deploy:
     needs: test-and-report
     runs-on: ubuntu-latest
