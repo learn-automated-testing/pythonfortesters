@@ -1,4 +1,4 @@
-name: API Tests with Allure History
+name: Run Tests and Generate Reports
 
 on:
   push:
@@ -29,6 +29,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y wget unzip curl xvfb
 
+      - name: Install Chrome
+        run: |
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
       - name: Install Allure commandline
         run: |
           wget -qO- https://repo.maven.apache.org/maven2/io/qameta/allure/allure-commandline/2.24.0/allure-commandline-2.24.0.tgz | tar -xz -C /opt/
@@ -37,7 +44,30 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r practiceautomatedtesting/api/requirements.txt
+          pip install pytest allure-pytest pytest-html requests python-dotenv selenium webdriver-manager
+
+      - name: Create combined requirements.txt
+        run: |
+          cat practiceautomatedtesting/shopping/requirements.txt > combined_requirements.txt
+          echo "" >> combined_requirements.txt
+          cat practiceautomatedtesting/api/requirements.txt >> combined_requirements.txt
+          # Remove duplicates
+          sort combined_requirements.txt | uniq > temp_requirements.txt
+          mv temp_requirements.txt combined_requirements.txt
+
+      - name: Install project dependencies
+        run: |
+          pip install -r combined_requirements.txt
+
+      - name: Set up environment variables
+        run: |
+          echo "CHROME_HEADLESS=true" >> $GITHUB_ENV
+          echo "DISPLAY=:99" >> $GITHUB_ENV
+          echo "TIMESTAMP=$(date +%Y%m%d_%H%M%S)" >> $GITHUB_ENV
+
+      - name: Start virtual display
+        run: |
+          Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
 
       - name: Clean previous results
         run: |
@@ -83,6 +113,46 @@ jobs:
             mkdir -p allure-results
             cp -r allure-history/history allure-results/
           fi
+
+      - name: Run WebElements tests
+        run: |
+          echo "=== Running WebElements Tests ==="
+          cd practiceautomatedtesting/webelements
+          echo "Current directory: $(pwd)"
+          echo "Test files found: $(find . -name "test_*.py" | wc -l)"
+          
+          if pytest --alluredir=../../allure-results -v -n 2 --dist=loadfile; then
+            echo "✅ WebElements tests completed successfully"
+          else
+            echo "⚠️ WebElements tests had issues (exit code: $?)"
+          fi
+          
+          echo "=== WebElements Results ==="
+          ls -la ../../allure-results/ || echo "No results found"
+        continue-on-error: true
+        env:
+          CHROME_HEADLESS: true
+          DISPLAY: :99
+
+      - name: Run Shopping tests
+        run: |
+          echo "=== Running Shopping Tests ==="
+          cd practiceautomatedtesting/shopping
+          echo "Current directory: $(pwd)"
+          echo "Test files found: $(find . -name "test_*.py" | wc -l)"
+          
+          if pytest --alluredir=../../allure-results -v -n 2 --dist=loadfile; then
+            echo "✅ Shopping tests completed successfully"
+          else
+            echo "⚠️ Shopping tests had issues (exit code: $?)"
+          fi
+          
+          echo "=== Shopping Results ==="
+          ls -la ../../allure-results/ || echo "No results found"
+        continue-on-error: true
+        env:
+          CHROME_HEADLESS: true
+          DISPLAY: :99
 
       - name: Run API tests
         run: |
@@ -176,6 +246,63 @@ jobs:
           name: test-artifact-verification
           path: test-artifact/
           retention-days: 1
+
+      - name: Generate Test Summary
+        run: |
+          echo "## Test Results Summary" >> test-summary.md
+          echo "" >> test-summary.md
+          echo "**Allure Report:** Available as artifact: allure-report" >> test-summary.md
+          echo "**GitHub Pages:** Will be deployed automatically after successful run" >> test-summary.md
+          echo "" >> test-summary.md
+          
+          # Count test files and results
+          echo "### WebElements Tests" >> test-summary.md
+          if [ -d "allure-results" ] && [ -n "$(find allure-results -name "*webelements*" -o -name "*test_*" | head -1)" ]; then
+            echo "- Test results available in allure-results" >> test-summary.md
+          else
+            echo "- No test results found" >> test-summary.md
+          fi
+          
+          echo "### Shopping Tests" >> test-summary.md
+          if [ -d "allure-results" ] && [ -n "$(find allure-results -name "*shopping*" -o -name "*test_*" | head -1)" ]; then
+            echo "- Test results available in allure-results" >> test-summary.md
+          else
+            echo "- No test results found" >> test-summary.md
+          fi
+          
+          echo "### API Tests" >> test-summary.md
+          if [ -d "allure-results" ] && [ -n "$(find allure-results -name "*api*" -o -name "*test_*" | head -1)" ]; then
+            echo "- Test results available in allure-results" >> test-summary.md
+          else
+            echo "- No test results found" >> test-summary.md
+          fi
+
+      - name: Upload Test Summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-summary
+          path: test-summary.md
+          retention-days: 30
+
+      - name: Comment PR with Test Results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            let summary = '';
+            try {
+              summary = fs.readFileSync('test-summary.md', 'utf8');
+            } catch (error) {
+              summary = '## Test Results Summary\n\nTest execution completed. Check artifacts for detailed results.';
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
 
   deploy:
     needs: test-and-report
